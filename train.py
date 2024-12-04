@@ -13,6 +13,7 @@ from evaluate import get_best_performance_data, get_val_performance_data, get_fu
 from sklearn.metrics import precision_score, recall_score, roc_auc_score, f1_score
 from torch.utils.data import DataLoader, random_split, Subset
 from scipy.stats import iqr
+from tqdm import tqdm
 
 
 
@@ -28,13 +29,12 @@ def train(model = None, save_path = '', config={},  train_dataloader=None, val_d
 
     seed = config['seed']
 
-    optimizer = torch.optim.Adam(model.parameters(), lr=0.001, weight_decay=config['decay'])
+    optimizer = torch.optim.Adam(model.parameters(), lr=config['lr'])
 
     now = time.time()
     
     train_loss_list = []
     cmp_loss_list = []
-
     device = get_device()
 
 
@@ -60,12 +60,13 @@ def train(model = None, save_path = '', config={},  train_dataloader=None, val_d
         acu_loss = 0
         model.train()
 
-        for x, labels, attack_labels, edge_index in dataloader:
+        for x, labels, attack_labels, edge_index in tqdm(dataloader):
             _start = time.time()
 
             x, labels, edge_index = [item.float().to(device) for item in [x, labels, edge_index]]
 
             optimizer.zero_grad()
+
             out = model(x, edge_index).float().to(device)
             loss = loss_func(out, labels)
             
@@ -91,6 +92,7 @@ def train(model = None, save_path = '', config={},  train_dataloader=None, val_d
             val_loss, val_result = test(model, val_dataloader)
 
             if val_loss < min_loss:
+                print(save_path)
                 torch.save(model.state_dict(), save_path)
 
                 min_loss = val_loss

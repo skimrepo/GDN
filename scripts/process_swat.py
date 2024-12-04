@@ -38,13 +38,15 @@ def downsample(data, labels, down_len):
 
 
 def main():
+    train = pd.read_csv(f'../../Data/SWaT/swat_train2.csv', sep=',')
+    print(train.columns)
+    test = pd.read_csv(f'../../Data/SWaT/swat_raw.csv', sep=',', skiprows=1).iloc[:, 1:]
+    test["Normal/Attack"] = test["Normal/Attack"].map({"Normal": 0, "Attack": 1, "A ttack": 1})
+    print(test.columns)
 
-    test = pd.read_csv('./swat_test.csv', index_col=0)
-    train = pd.read_csv('./swat_train.csv', index_col=0)
 
-
-    test = test.iloc[:, 1:]
-    train = train.iloc[:, 1:]
+    test.rename(columns={'Normal/Attack': 'attack'}, inplace=True)
+    train.rename(columns={'Normal/Attack': 'attack'}, inplace=True)
 
     train = train.fillna(train.mean())
     test = test.fillna(test.mean())

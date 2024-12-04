@@ -19,6 +19,8 @@ class GraphLayer(MessagePassing):
         self.concat = concat
         self.negative_slope = negative_slope
         self.dropout = dropout
+        self.node_dim = 0
+
 
         self.__alpha__ = None
 
@@ -95,19 +97,14 @@ class GraphLayer(MessagePassing):
             key_i = torch.cat((x_i, embedding_i), dim=-1)
             key_j = torch.cat((x_j, embedding_j), dim=-1)
 
-
-
         cat_att_i = torch.cat((self.att_i, self.att_em_i), dim=-1)
         cat_att_j = torch.cat((self.att_j, self.att_em_j), dim=-1)
 
         alpha = (key_i * cat_att_i).sum(-1) + (key_j * cat_att_j).sum(-1)
 
-
         alpha = alpha.view(-1, self.heads, 1)
-
-
         alpha = F.leaky_relu(alpha, self.negative_slope)
-        alpha = softmax(alpha, edge_index_i, size_i)
+        alpha = softmax(alpha, edge_index_i, num_nodes=size_i)
 
         if return_attention_weights:
             self.__alpha__ = alpha

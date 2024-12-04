@@ -69,11 +69,9 @@ class GNNLayer(nn.Module):
         self.leaky_relu = nn.LeakyReLU()
 
     def forward(self, x, edge_index, embedding=None, node_num=0):
-
         out, (new_edge_index, att_weight) = self.gnn(x, edge_index, embedding, return_attention_weights=True)
         self.att_weight_1 = att_weight
         self.edge_index_1 = new_edge_index
-  
         out = self.bn(out)
         
         return self.relu(out)
@@ -100,7 +98,6 @@ class GDN(nn.Module):
         self.gnn_layers = nn.ModuleList([
             GNNLayer(input_dim, dim, inter_dim=dim+embed_dim, heads=1) for i in range(edge_set_num)
         ])
-
 
         self.node_embedding = None
         self.topk = topk
@@ -146,7 +143,6 @@ class GDN(nn.Module):
             all_embeddings = all_embeddings.repeat(batch_num, 1)
 
             weights = weights_arr.view(node_num, -1)
-
             cos_ji_mat = torch.matmul(weights, weights.T)
             normed_mat = torch.matmul(weights.norm(dim=-1).view(-1,1), weights.norm(dim=-1).view(1,-1))
             cos_ji_mat = cos_ji_mat / normed_mat
@@ -158,23 +154,17 @@ class GDN(nn.Module):
 
             self.learned_graph = topk_indices_ji
 
-            gated_i = torch.arange(0, node_num).T.unsqueeze(1).repeat(1, topk_num).flatten().to(device).unsqueeze(0)
+            gated_i = torch.arange(0, node_num, device=device).view(-1, 1).repeat(1, topk_num).flatten().unsqueeze(0)
             gated_j = topk_indices_ji.flatten().unsqueeze(0)
             gated_edge_index = torch.cat((gated_j, gated_i), dim=0)
-
             batch_gated_edge_index = get_batch_edge_index(gated_edge_index, batch_num, node_num).to(device)
             gcn_out = self.gnn_layers[i](x, batch_gated_edge_index, node_num=node_num*batch_num, embedding=all_embeddings)
-
-            
             gcn_outs.append(gcn_out)
-
         x = torch.cat(gcn_outs, dim=1)
         x = x.view(batch_num, node_num, -1)
-
-
         indexes = torch.arange(0,node_num).to(device)
         out = torch.mul(x, self.embedding(indexes))
-        
+
         out = out.permute(0,2,1)
         out = F.relu(self.bn_outlayer_in(out))
         out = out.permute(0,2,1)
@@ -182,7 +172,7 @@ class GDN(nn.Module):
         out = self.dp(out)
         out = self.out_layer(out)
         out = out.view(-1, node_num)
-   
+
 
         return out
         

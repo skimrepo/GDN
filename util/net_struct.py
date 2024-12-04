@@ -1,16 +1,14 @@
 import glob
 
 
-def get_feature_map(dataset):
-    feature_file = open(f'./data/{dataset}/list.txt', 'r')
+def get_feature_map(feature_file):
     feature_list = []
     for ft in feature_file:
         feature_list.append(ft.strip())
 
     return feature_list
 # graph is 'fully-connect'
-def get_fc_graph_struc(dataset):
-    feature_file = open(f'./data/{dataset}/list.txt', 'r')
+def get_fc_graph_struc(feature_file):
 
     struc_map = {}
     feature_list = []

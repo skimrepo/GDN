@@ -20,6 +20,7 @@ from util.preprocess import *
 
 def test(model, dataloader):
     # test
+    torch.cuda.empty_cache()
     loss_func = nn.MSELoss(reduction='mean')
     device = get_device()
 
